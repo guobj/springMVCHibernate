@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans  xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:aop="http://www.springframework.org/schema/aop"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+        xmlns:p="http://www.springframework.org/schema/p"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+    <description>Shiro安全配置</description>
+
+    <!-- 读取配置文件 -->
+    <context:property-placeholder ignore-unresolvable="true" location="classpath*:/application.properties" />
+
+    <!-- 保证实现了Shiro内部lifecycle函数的bean执行 -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!-- 自定义Realm -->
+    <bean id="authorRealm" class="com.gbj.example.AuthorizingRealm.AuthorRealm" />
+
+    <!--  缓存管理:用户授权信息Cache, 采用EhCache -->
+    <!--<bean id="shiroEhcacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">-->
+        <!--<property name="cacheManagerConfigFile" value="classpath:cache/ehcache-shiro.xml"/>-->
+    <!--</bean>-->
+
+    <!-- Shiro安全管理器 :Shiro的主要业务层对象基于web的应用程序 ref是对应的配置或者类名，-->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realm" ref="authorRealm" />
+        <!--<property name="cacheManager" ref="shiroEhcacheManager" />-->
+    </bean>
+
+    <!--  自定义验证码Filter-->
+    <!--
+        <bean id="myCaptchaFilter" class="com.project.system.utils.FormAuthenticationCaptchaFilter"/>
+    -->
+    <!-- Shiro Filter -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- Shiro的核心安全接口，这个属性是必须的 -->
+        <property name="securityManager" ref="securityManager" />
+        <!-- 要求登录时的链接(登录页面地址)，非必须的属性，默认会自动寻找Web工程根目录下的"/login.jsp"页面 -->
+        <property name="loginUrl" value="${adminPath}" />
+        <!-- 登录成功后要跳转的连接-->
+        <property name="successUrl" value="/test" />
+        <!-- 用户访问未对其授权的资源时，所显示的连接 -->
+        <!-- <property name="unauthorizedUrl" value="/"></property>   -->
+        <!--
+        <property name="filters">
+            <map>
+                <entry key="authc" value-ref="myCaptchaFilter"/>
+            </map>
+        </property>
+         -->
+        <!-- "anon"访问是不需要认证控制的,主要是用于用户登录和退出 -->
+        <!-- "authc"访问是需要认证控制的，就是说只有通过认证的用户才可以访问该资源。如果用户直接在地址栏中，系统会自动跳转至登录页面，要求用户先进行身份认证 -->
+        <property name="filterChainDefinitions">
+            <value>
+                /static/** = anon
+                ${adminPath} = anon
+                /** = authc
+                /rest/**=authcBasic
+                /test = authc
+            </value>
+        </property>
+    </bean>
+
+    <!--
+        AOP式方法级权限检查:开启Shiro的注解(如@RequiresRoles，@RequiresPermissions)，
+        需借助SpringAOP扫描使用Shiro注解的类，并在必要时进行安全逻辑验证
+    -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" depends-on="lifecycleBeanPostProcessor">
+        <property name="proxyTargetClass" value="true" />
+    </bean>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+</beans>

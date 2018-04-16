@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+         http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         id="springMVCHibernate" version="3.0">
+  <display-name>springMVCHibernate</display-name>
+
+  <!-- 地址为http://localhost:8030/  显示的默认网页-->
+  <welcome-file-list>
+    <welcome-file>/index.jsp</welcome-file>
+  </welcome-file-list>
+
+  <!-- 配置编码过滤器 -->
+  <filter>
+    <filter-name>characterEncodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+      <param-name>encoding</param-name>
+      <param-value>utf-8</param-value>
+    </init-param>
+    <init-param>
+      <param-name>forceEncoding</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>characterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- spring配置文件名称与位置 -->
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>
+      classpath:/applicationContext.xml,
+      classpath:/shiro-security.xml
+    </param-value>
+
+  </context-param>
+
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+
+
+  <!-- spring MVC config start-->
+  <servlet>
+    <servlet-name>springServlet</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+      <param-name>contextConfigLocation</param-name>
+      <!-- 此处指向的的是SpringMVC的配置文件 -->
+      <param-value>classpath:/spring-mvc.xml</param-value>
+    </init-param>
+    <!--配置容器在启动的时候就加载这个servlet并实例化-->
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>springServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+  <!-- spring MVC config end-->
+
+  <!-- Hibernate Open Session In View filter 允许在事务提交之后延迟加载显示所需要的对象。-->
+  <filter>
+    <filter-name>openSessionInViewFilter</filter-name>
+    <filter-class>org.springframework.orm.hibernate4.support.OpenSessionInViewFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>openSessionInViewFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- shiro filter -->
+  <filter>
+    <filter-name>shiroFilter</filter-name>
+    <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    <init-param>
+      <param-name>targetFilterLifecycle</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>shiroFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <listener>
+    <listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+  </listener>
+
+  <!-- session过期时间 -->
+  <session-config>
+    <session-timeout>15</session-timeout>
+  </session-config>
+
+  <!-- druid 监控 -->
+  <servlet>
+    <servlet-name>DruidStatView</servlet-name>
+    <servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>DruidStatView</servlet-name>
+    <url-pattern>/druid/*</url-pattern>
+  </servlet-mapping>
+
+  <!-- 错误页面设置 -->
+  <error-page>
+    <exception-type>java.lang.Throwable</exception-type>
+    <location>/WEB-INF/views/error/500.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>500</error-code>
+    <location>/WEB-INF/views/error/500.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>404</error-code>
+    <location>/WEB-INF/views/error/404.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>403</error-code>
+    <location>/WEB-INF/views/error/403.jsp</location>
+  </error-page>
+
+</web-app>
